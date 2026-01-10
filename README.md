@@ -6,6 +6,9 @@ For example, you are in some hotel, would like to make a poll to arrange a Minya
 
 ~ PasteBin.com: less restrictions, and chat like ..
 
+`python -m unittest discover -s tests -p "test_*.py" -q`
+
+
 **Some UI for example:**
 
 ### Near-by Scheduling App 📍
