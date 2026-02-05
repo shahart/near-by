@@ -74,16 +74,17 @@ function getMsgs() {
 
 function getLoc() {
     if (navigator.geolocation) {
-        // console.debug("Getting location... " + new Date().toJSON());
+        console.info("Getting location... " + new Date().toJSON());
         navigator.geolocation.getCurrentPosition(function(position) {
             lat = position.coords.latitude;
             lon = position.coords.longitude;
             let googleMapsLink = 'https://www.google.com/maps/place/' + lat + 'N+' + lon + 'E';
-            // document.getElementById("myLoc").href = googleMapsLink;
+            document.getElementById("myLoc").href = googleMapsLink;
             console.log(googleMapsLink);
             document.getElementById("myMsg").disabled = false;
-            // console.debug("Getting messages... " + new Date().toJSON());
+            console.info("Getting messages... " + new Date().toJSON());
             getMsgs();
+            console.info("Getting messages... Done " + new Date().toJSON());
         });
     } else {
         alert("GeoLocation is not supported by this browser.");
@@ -113,6 +114,9 @@ function putMsg(msg, from, subject) {
     xhrAws.send(JSON.stringify({ "lat_lon": lat + "_" + lon , "op": "put", "text": msg, "from": from, "subject": subject }));
 }
 
+if (document.getElementById("subject").value == "") {
+    alert("Please set the subject in the address url, e.g., ?subject=YourSubjectHere");
+}
 
 if (lat === "") {
     alert('wait couple of seconds for the location to be set');
@@ -127,7 +131,10 @@ document.getElementById("myMsg").addEventListener('click', function(e) {
     if (msg !== "" && from !== "" && subject !== "") {
         putMsg(msg, from, subject);
     }
-});
+    else {
+        alert("Please fill in all fields, subject in the address url, and from/Message.");
+    }
+}); 
 
 // document.getElementById("refresh").addEventListener('click', function(e) {
 //     getMsgs();

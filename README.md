@@ -8,6 +8,7 @@ For example, you are in some hotel, would like to make a poll to arrange a Minya
 
 `python -m unittest discover -s tests -p "test_*.py" -q`
 
+Note some browser extensions like 'Location Guard' might impact the ability to use this near-by site.
 
 **Some UI for example:**
 
