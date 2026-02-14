@@ -78,7 +78,19 @@ function getLoc() {
         navigator.geolocation.getCurrentPosition(function(position) {
             lat = position.coords.latitude;
             lon = position.coords.longitude;
-            let googleMapsLink = 'https://www.google.com/maps/place/' + lat + 'N+' + lon + 'E';
+            let googleMapsLink = 'https://www.google.com/maps/place/';
+            if (lat.startsWith('-')) {
+                googleMapsLink += lat.substring(1) + 'S+';
+            }
+            else {
+                googleMapsLink += lat + "N+";
+            }
+            if (lon.startsWith('-')) {
+                googleMapsLink += lon.substring(1) + 'W';
+            }
+            else {
+                googleMapsLink += lon + "E";
+            }
             document.getElementById("myLoc").href = googleMapsLink;
             console.log(googleMapsLink);
             document.getElementById("myMsg").disabled = false;
