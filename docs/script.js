@@ -76,8 +76,8 @@ function getLoc() {
     if (navigator.geolocation) {
         console.info("Getting location... " + new Date().toJSON());
         navigator.geolocation.getCurrentPosition(function(position) {
-            lat = position.coords.latitude;
-            lon = position.coords.longitude;
+            lat = String(position.coords.latitude);
+            lon = String(position.coords.longitude);
             let googleMapsLink = 'https://www.google.com/maps/place/';
             if (lat.startsWith('-')) {
                 googleMapsLink += lat.substring(1) + 'S+';
