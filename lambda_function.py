@@ -3,8 +3,8 @@ import json
 import time 
 import math
 
-# prompt: write me nearDisance python function that takes 2 params, in form of 'latitude_longitude' like '31.2_35.5' and returns true if the distance between them is less than 200 meters.
-def nearDistance(a, b, threshold_meters=200):
+# prompt: write me nearDisance python function that takes 2 params, in form of 'latitude_longitude' like '31.2_35.5' and returns true if the distance between them is less than X meters.
+def nearDistance(a, b, threshold_meters=500):
     """Return True if distance between a and b is <= threshold_meters.
     Accepts strings like '31.2_35.5' (also supports ',' or space separators).
     """

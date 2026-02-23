@@ -28,7 +28,7 @@
 
 **Examples & quick references**
 - Where the client POSTs messages: see `putMsg()` in [docs/script.js](docs/script.js).
-- Proximity check implementation: `nearDistance(a, b, threshold_meters=200)` in [lambda_function.py](lambda_function.py) — accepts strings like `"31.2_35.5"`.
+- Proximity check implementation: `nearDistance(a, b, threshold_meters=500)` in [lambda_function.py](lambda_function.py) — accepts strings like `"31.2_35.5"`.
 - Message model example (from Lambda `put` handler): `{ 'time_stamp': <int>, 'text': <str>, 'from': <str>, 'subject': <str>, 'lat-lon': <str> }`.
 
 **What to look for when changing behavior**

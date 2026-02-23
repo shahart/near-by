@@ -1,6 +1,6 @@
 # Near by chat #
 
-An ability to broadcast messages between all users in the radius of tbd = 200 meters.
+An ability to broadcast messages between all users in the radius of tbd = 500 meters.
 
 For example, you are in some hotel, would like to make a poll to arrange a Minyan, without knowing the people phones to create some Whatsapp group. Put a paper near the reception with a QR code to https://shahart.github.io/near-by-sched/index.html?subject=Ramot, and the initial message
 

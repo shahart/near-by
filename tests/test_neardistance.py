@@ -22,8 +22,8 @@ class TestNearDistance(unittest.TestCase):
     def test_threshold_behavior(self):
         # ~111m per 0.001 degree latitude. 0.001 -> ~111m -> True
         self.assertTrue(nearDistance('31.200_35.500', '31.201_35.500'))
-        # 0.002 -> ~222m -> False (default threshold 200m)
-        self.assertFalse(nearDistance('31.200_35.500', '31.202_35.500'))
+        # 0.002 -> ~222m -> False (default threshold 500m)
+        self.assertFalse(nearDistance('31.200_35.500', '31.202_35.505'))
 
     def test_invalid_inputs(self):
         self.assertFalse(nearDistance(None, '31.2_35.5'))

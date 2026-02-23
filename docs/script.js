@@ -148,6 +148,6 @@ document.getElementById("myMsg").addEventListener('click', function(e) {
     }
 }); 
 
-// document.getElementById("refresh").addEventListener('click', function(e) {
-//     getMsgs();
-// });
+document.getElementById("refresh").addEventListener('click', function(e) {
+    getMsgs();
+});
