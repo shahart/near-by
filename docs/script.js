@@ -1,5 +1,10 @@
 let lat = "";
 let lon = "";
+let liveUpdates = null;
+let sseSince = Math.floor(Date.now() / 1000);
+let seenMessageIds = new Set();
+
+const lambdaUrl = 'https://pqy3uiungkvualjhk7f3eo5qdy0wfcii.lambda-url.eu-north-1.on.aws/';
 
 const params = new URLSearchParams(document.location.search);
 if (params.has('subject')) {
@@ -26,6 +31,84 @@ if (cookieInput !== "") {
     document.getElementById('from').value = cookieInput;
 }
 
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function(ch) {
+        return ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[ch];
+    });
+}
+
+function getItemCreatedAt(item) {
+    if (item['created_at']) {
+        return Number(item['created_at']);
+    }
+    return Number(item['time_stamp']) - 36*3600;
+}
+
+function getMessageKey(item) {
+    if (item['message_id']) {
+        return item['message_id'];
+    }
+    return [
+        getItemCreatedAt(item),
+        item['from'] || "",
+        item['subject'] || "",
+        item['text'] || ""
+    ].join("|");
+}
+
+function setLiveStatus(text) {
+    document.getElementById("liveStatus").textContent = text;
+}
+
+function startLiveUpdates() {
+    if (liveUpdates) {
+        liveUpdates.close();
+    }
+
+    let subject = document.getElementById("subject").value;
+    if (lat === "" || lon === "" || subject === "") {
+        return;
+    }
+
+    let url = new URL(lambdaUrl);
+    url.searchParams.set("op", "sse");
+    url.searchParams.set("lat_lon", lat + "_" + lon);
+    url.searchParams.set("subject", subject);
+    url.searchParams.set("since", String(Math.max(0, sseSince - 1)));
+
+    liveUpdates = new EventSource(url.toString());
+
+    liveUpdates.onopen = function() {
+        setLiveStatus("Live updates connected.");
+    };
+
+    liveUpdates.addEventListener("message", function(e) {
+        let item = JSON.parse(e.data);
+        let createdAt = Number(item.created_at || 0);
+        let messageKey = getMessageKey(item);
+        if (seenMessageIds.has(messageKey)) {
+            return;
+        }
+
+        seenMessageIds.add(messageKey);
+        sseSince = Math.max(sseSince, createdAt);
+        setLiveStatus("New message from " + (item.from || "someone nearby") + ".");
+        getMsgs();
+        liveUpdates.close();
+        setTimeout(startLiveUpdates, 1000);
+    });
+
+    liveUpdates.onerror = function() {
+        setLiveStatus("Live updates reconnecting...");
+    };
+}
+
 function getMsgs() {
     var xhrAws = new XMLHttpRequest();
     xhrAws.responseType = 'json';
@@ -37,7 +120,7 @@ function getMsgs() {
                 return;
             }
             let resp = "";
-            let sorted = this.response;
+            let sorted = this.response || [];
             sorted.sort(function(a,b){ 
                 var x = a.time_stamp < b.time_stamp? -1 : 1; 
                 return x; 
@@ -51,10 +134,12 @@ function getMsgs() {
                         console.warn("skipping recent msg " + item['text']); 
                     }
                     else {
+                        sseSince = Math.max(sseSince, getItemCreatedAt(item));
+                        seenMessageIds.add(getMessageKey(item));
                         resp =  
-                            "<br><br> From: " + item['from'] +
+                            "<br><br> From: " + escapeHtml(item['from']) +
                             // "<br> Subject: " + item['subject'] +
-                            "<br> Message: " + item['text'] +
+                            "<br> Message: " + escapeHtml(item['text']) +
                             "<br> Date: " + new Date((item['time_stamp'] - 36*3600)*1000).toLocaleString() +
                             resp;
                     }
@@ -67,7 +152,7 @@ function getMsgs() {
         }
     }
 
-    xhrAws.open('POST', 'https://pqy3uiungkvualjhk7f3eo5qdy0wfcii.lambda-url.eu-north-1.on.aws/', true);
+    xhrAws.open('POST', lambdaUrl, true);
     xhrAws.setRequestHeader("Content-Type", "application/json");
     xhrAws.send(JSON.stringify({ "lat_lon": lat + "_" + lon, "subject": document.getElementById("subject").value , "op": "get" }));
 }
@@ -96,6 +181,7 @@ function getLoc() {
             document.getElementById("myMsg").disabled = false;
             console.info("Getting messages... " + new Date().toJSON());
             getMsgs();
+            startLiveUpdates();
             console.info("Getting messages... Done " + new Date().toJSON());
         });
     } else {
@@ -121,7 +207,7 @@ function putMsg(msg, from, subject) {
         }
     }
 
-    xhrAws.open('POST', 'https://pqy3uiungkvualjhk7f3eo5qdy0wfcii.lambda-url.eu-north-1.on.aws/', true);
+    xhrAws.open('POST', lambdaUrl, true);
     xhrAws.setRequestHeader("Content-Type", "application/json");
     xhrAws.send(JSON.stringify({ "lat_lon": lat + "_" + lon , "op": "put", "text": msg, "from": from, "subject": subject }));
 }

@@ -2,6 +2,73 @@ import boto3
 import json
 import time 
 import math
+import uuid
+from decimal import Decimal
+
+TTL_SECONDS = 36*3600
+
+def json_default(value):
+    if isinstance(value, Decimal):
+        if value % 1 == 0:
+            return int(value)
+        return float(value)
+    raise TypeError
+
+def response(status_code, body, content_type='application/json'):
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': content_type
+        },
+        'body': body if isinstance(body, str) else json.dumps(body, default=json_default)
+    }
+
+def getData(event):
+    method = event.get('requestContext', {}).get('http', {}).get('method', '')
+    if method == 'GET':
+        return event.get('queryStringParameters') or {}
+    body = event.get('body') or '{}'
+    return json.loads(body)
+
+def itemCreatedAt(item):
+    if item.get('created_at') is not None:
+        return int(item.get('created_at'))
+    return int(item.get('time_stamp', 0)) - TTL_SECONDS
+
+def nearItems(table, lat_lon, subject):
+    near_by_items = []
+    all_items = table.scan()['Items']
+
+    for item in all_items:
+        item_latlon = item.get('lat-lon')
+        if item.get('subject') == subject and nearDistance(lat_lon, item_latlon):
+            near_by_items.append(item)
+
+    return near_by_items
+
+def sseResponse(items, since):
+    lines = [
+        'retry: 5000',
+        ''
+    ]
+    for item in sorted(items, key=itemCreatedAt):
+        created_at = itemCreatedAt(item)
+        if created_at <= since:
+            continue
+        event_data = {
+            'created_at': created_at,
+            'message_id': item.get('message_id', ''),
+            'from': item.get('from', ''),
+            'subject': item.get('subject', ''),
+            'text': item.get('text', '')
+        }
+        lines.append('event: message')
+        lines.append('id: ' + str(created_at) + '-' + str(item.get('message_id', '')))
+        lines.append('data: ' + json.dumps(event_data, default=json_default))
+        lines.append('')
+
+    return response(200, '\n'.join(lines) + '\n', 'text/event-stream')
 
 # prompt: write me nearDisance python function that takes 2 params, in form of 'latitude_longitude' like '31.2_35.5' and returns true if the distance between them is less than X meters.
 def nearDistance(a, b, threshold_meters=500):
@@ -46,34 +113,34 @@ def nearDistance(a, b, threshold_meters=500):
     return dist <= threshold_meters
 
 def lambda_handler(event, context):
-    sourceIp = event.get('headers').get('x-forwarded-for')
+    sourceIp = (event.get('headers') or {}).get('x-forwarded-for')
     dynamodb = boto3.resource('dynamodb', region_name='eu-north-1')
     table = dynamodb.Table("free-text")
-    all_items = []
-    near_by_items = []
 
-    data = json.loads(event.get('body'))
+    data = getData(event)
     lat_lon = data.get('lat_lon')
 
     if (lat_lon is None):
-        return {
-            'statusCode': 400,
-            'body': json.dumps('missing lat_lon')
-        }
+        return response(400, 'missing lat_lon')
 
     op = data.get('op', {})
     # print('lat_lon:', lat_lon, 'op:', op)
+
+    if (op == 'sse'):
+        since = int(data.get('since', 0))
+        items = nearItems(table, lat_lon, data.get('subject'))
+        return sseResponse(items, since)
 
     if (op == 'put'):
         # return new_item(data, table, lat_lon);
         text = data.get('text')
         if (text is None):
-            return {
-                'statusCode': 400,
-                'body': json.dumps('missing text')
-            }
+            return response(400, 'missing text')
+        created_at = int(time.time())
         item = {
-            'time_stamp': int( time.time() + 36*3600 ),  # expire after 36 hours
+            'time_stamp': created_at + TTL_SECONDS,  # expire after 36 hours
+            'created_at': created_at,
+            'message_id': str(uuid.uuid4()),
             'text': text,
             'from': data.get('from', ''),
             'subject': data.get('subject', ''),
@@ -81,26 +148,13 @@ def lambda_handler(event, context):
         }
         # TODO don't put from the same user & sourceIp on same subject more than once in 1 sec.
         table.put_item(Item=item)
-        return {
-            'statusCode': 201,
-            'body': json.dumps('item added')
-        }
+        return response(201, 'item added')
 
     # return near_items(data, table, lat_lon);
 
-    all_items = table.scan()['Items']
-
-    for item in all_items:
-        # print(item)
-        item_latlon = item.get('lat-lon')
-        # print('item_latlon:', item_latlon)
-        if item.get('subject') == data.get('subject') and nearDistance(lat_lon, item_latlon):
-            near_by_items.append(item)
+    near_by_items = nearItems(table, lat_lon, data.get('subject'))
 
     # TODO query(), to be sort by the time_stamp using 2nd index.
     # or return body: near_by_items[near_by_items[:, 0].argsort()]
 
-    return {
-        'statusCode': 200,
-        'body': near_by_items
-    }
+    return response(200, near_by_items)

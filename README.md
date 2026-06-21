@@ -10,6 +10,16 @@ For example, you are in some hotel, would like to make a poll to arrange a Minya
 
 Note some browser extensions like 'Location Guard' might impact the ability to use this near-by site.
 
+## Deployment
+
+`aws lambda update-function-code --function-name near-by-chat --zip-file fileb://lambda.zip --region eu-north-1`
+
+See more at .github/copilot-instr-extras.md
+
+## Testing
+
+on Mac: `open -a "Google Chrome" --args --disable-web-security --user-data-dir=/tmp/chrome`
+
 **Some UI for example:**
 
 ### Near-by Scheduling App 📍

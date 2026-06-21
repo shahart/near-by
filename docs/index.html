@@ -290,6 +290,13 @@
             font-size: 0.95rem;
         }
 
+        #liveStatus {
+            min-height: 24px;
+            color: var(--secondary);
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
         #conversation {
             display: block;
             min-height: 280px;
@@ -356,7 +363,7 @@
                     <div class="form-grid">
                         <label>
                             Subject
-                            <input type="text" id="subject" value="" name="subject" disabled="true">
+                            <input type="text" id="subject" value="" name="subject" disabled="disabled">
                         </label>
                         <label>
                             From
@@ -367,7 +374,7 @@
                             <input type="text" id="msg" value="" name="msg" placeholder="Short note for people nearby">
                         </label>
                         <div class="button-row">
-                            <button id="myMsg" disabled="true">Here's my msg</button>
+                            <button id="myMsg" disabled="disabled">Here's my msg</button>
                             <button id="refresh">Refresh Thread</button>
                         </div>
                     </div>
@@ -381,6 +388,7 @@
                         <h2>Thread</h2>
                         <p>Recent messages from the last day and a half.</p>
                     </div>
+                    <div id="liveStatus">Connecting live updates...</div>
                     <label id="conversation">Loading nearby messages...</label>
                 </div>
             </section>
