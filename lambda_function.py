@@ -18,7 +18,6 @@ def response(status_code, body, content_type='application/json'):
     return {
         'statusCode': status_code,
         'headers': {
-            'Access-Control-Allow-Origin': '*',
             'Content-Type': content_type
         },
         'body': body if isinstance(body, str) else json.dumps(body, default=json_default)

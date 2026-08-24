@@ -43,6 +43,7 @@ test('SSE returns only newer messages with the same subject and location', async
 
     assert.equal(result.statusCode, 200);
     assert.equal(result.headers['Content-Type'], 'text/event-stream');
+    assert.equal(result.headers['Access-Control-Allow-Origin'], undefined);
     assert.match(result.body, /event: message/);
     assert.match(result.body, /id: 101-new-nearby/);
     assert.match(result.body, /"message_id":"new-nearby"/);

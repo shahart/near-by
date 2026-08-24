@@ -89,6 +89,7 @@ class TestSse(unittest.TestCase):
 
         self.assertEqual(result['statusCode'], 200)
         self.assertEqual(result['headers']['Content-Type'], 'text/event-stream')
+        self.assertNotIn('Access-Control-Allow-Origin', result['headers'])
         self.assertIn('event: message', result['body'])
         self.assertIn('id: 101', result['body'])
         self.assertIn('"message_id": "new-nearby"', result['body'])

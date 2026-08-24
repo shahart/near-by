@@ -10,7 +10,6 @@ function response(statusCode, body, contentType = 'application/json') {
     return {
         statusCode,
         headers: {
-            'Access-Control-Allow-Origin': '*',
             'Content-Type': contentType
         },
         body: typeof body === 'string' ? body : JSON.stringify(body)

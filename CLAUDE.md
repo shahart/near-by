@@ -26,7 +26,7 @@ npx http-server docs
 **Deploy Lambda after changes:**
 ```bash
 zip lambda.zip lambda_function.py
-aws lambda update-function-code --function-name near-by-chat --zip-file fileb://lambda.zip --region eu-north-1
+aws lambda update-function-code --function-name near-by-sched --zip-file fileb://lambda.zip --region eu-north-1
 ```
 
 ## Architecture
